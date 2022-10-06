@@ -26,7 +26,7 @@ export class DoctorService {
       'apmaterno': '',
       'nombres': ''
     });
-    console.log(data);
+    // console.log(data);
 
     const response = await this.httpService.post('https://200.48.13.39/cmp/php/listaxmedico.php', data, {
       headers: {
@@ -38,7 +38,8 @@ export class DoctorService {
     const dataArray = $("table td").toArray();
     const medicoData = dataArray.map(e => (e.children[0] as any).data);
     if (medicoData.length == 0) throw new NotFoundException(`Not exists doctor with cmp '${cmp}'`);
-    console.log(medicoData);
+    
+    // console.log(medicoData);
 
     return {
       cmp,
