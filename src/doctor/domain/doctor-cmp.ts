@@ -58,7 +58,7 @@ export class DoctorCmpDetail {
   certifications: DoctorCertifications[]
 }
 
-class DoctorImage {
+export class DoctorImage {
   @ApiProperty()
   src: string;
   @ApiProperty()
@@ -66,7 +66,7 @@ class DoctorImage {
   @ApiProperty()
   height: string;
 }
-class DoctorCertifications {
+export class DoctorCertifications {
   @ApiProperty()
   registry: string;
   @ApiProperty()

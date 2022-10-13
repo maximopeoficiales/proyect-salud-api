@@ -4,7 +4,7 @@ import * as  qs from 'qs';
 import cheerio from 'cheerio';
 import { HttpService } from '@nestjs/axios';
 
-import { DoctorCmp, DoctorCmpDetail } from './interfaces/doctor-cmp.interface';
+import { DoctorCertifications, DoctorCmp, DoctorCmpDetail } from './domain/doctor-cmp';
 import { getDataCheerioByArray } from 'src/shared/cheerio.utils';
 import { getText } from 'src/shared/text.utils';
 import { ConfigService } from 'src/config/config.service';
@@ -63,17 +63,29 @@ export class DoctorService {
     // extract data
     const $ = cheerio.load(response.data);
     const dataArray = $("table td,table center").toArray();
-    const dataCertificationsArray = $("#simple-example-table4 td").toArray();
+    const certifications: DoctorCertifications[] = [];
+    // extraigo las certificaciones en casa vinieran varias
+    $("#simple-example-table4 tr").each((i, e) => {
+      if (i > 0) {
+        const dataCertification = getDataCheerioByArray($(e).children("td").toArray());
+        certifications.push({
+          registry: getText(dataCertification[0]),
+          type: getText(dataCertification[1]),
+          code: getText(dataCertification[2]),
+          date: getText(dataCertification[3]),
+        })
+      }
+    });
     const dataImageArray = $("table td img").toArray();
 
     const medicoData = getDataCheerioByArray(dataArray);
     if (medicoData.length == 0) throw new NotFoundException(`There is no doctor with the parameters sought`);
 
-    const certifications = getDataCheerioByArray(dataCertificationsArray);
+    // const certifications = getDataCheerioByArray(dataCertificationsArray);
     const imageAttribsDoctor = dataImageArray.length > 0 ? dataImageArray[0].attribs : null;
     const imageSrc = getText(imageAttribsDoctor.src).length > 0 ? `${this.urlCMP}/${this.directionUrl}/${imageAttribsDoctor.src}` : "";
 
-    console.log({ certifications });
+    // console.log({ certifications });
 
     return {
       cmp,
@@ -88,7 +100,7 @@ export class DoctorService {
       email: getText(medicoData[8]),
       regionalCouncil: getText(medicoData[9]),
       description: getText(medicoData[10]),
-      certifications: []
+      certifications,
     }
   }
 
