@@ -6,6 +6,8 @@ import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [ConfigModule, HttpModule.register({
+    baseURL: process.env.URL_CMP,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     timeout: 5000,
     maxRedirects: 5,
   })],
