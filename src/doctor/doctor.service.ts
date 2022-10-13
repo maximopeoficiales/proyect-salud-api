@@ -20,11 +20,12 @@ export class DoctorService {
     this.directionUrl = "cmp/php";
   }
 
-  public async find(findData: Partial<DoctorCmp>): Promise<DoctorCmp> {
-
+  public async search(findData: Partial<DoctorCmp>): Promise<DoctorCmp[]> {
+    const doctorsCmp: DoctorCmp[] = [];
     if (Object.values(findData).length === 0) throw new BadRequestException("Send at least one search parameter");
 
     const { cmp, fatherLastName, motherLastName, names } = findData;
+
     const data = qs.stringify({
       'cmp': cmp ?? '',
       'Submit': 'Buscar',
@@ -36,22 +37,19 @@ export class DoctorService {
     const response = await this.httpService.post(`${this.directionUrl}/listaxmedico.php`, data).toPromise();
 
     const $ = cheerio.load(response.data);
-    const dataArray = $("table td").toArray();
-
-    const medicoData: string[] = dataArray.map(e => {
-      const dataElement = (e.children[0] as any)
-      return dataElement ? dataElement.data : "";
+    $("table tr").each((i, e) => {
+      if (i > 0) {
+        const doctorData = getDataCheerioByArray($(e).children("td").toArray());
+        doctorsCmp.push({
+          cmp: cmp || +getText(doctorData[1]),
+          fatherLastName: getText(doctorData[2]),
+          motherLastName: getText(doctorData[3]),
+          names: getText(doctorData[4]),
+        })
+      }
     });
 
-    if (medicoData.length == 0) throw new NotFoundException(`There is no doctor with the parameters sought`);
-
-
-    return {
-      cmp: cmp || +getText(medicoData[1]),
-      fatherLastName: getText(medicoData[2]),
-      motherLastName: getText(medicoData[3]),
-      names: getText(medicoData[4]),
-    }
+    return doctorsCmp;
   }
 
   public async getDetail(cmp: number): Promise<DoctorCmpDetail> {
@@ -81,11 +79,8 @@ export class DoctorService {
     const medicoData = getDataCheerioByArray(dataArray);
     if (medicoData.length == 0) throw new NotFoundException(`There is no doctor with the parameters sought`);
 
-    // const certifications = getDataCheerioByArray(dataCertificationsArray);
     const imageAttribsDoctor = dataImageArray.length > 0 ? dataImageArray[0].attribs : null;
     const imageSrc = getText(imageAttribsDoctor.src).length > 0 ? `${this.urlCMP}/${this.directionUrl}/${imageAttribsDoctor.src}` : "";
-
-    // console.log({ certifications });
 
     return {
       cmp,
@@ -105,6 +100,8 @@ export class DoctorService {
   }
 
   public async findByCmp(cmp: number): Promise<DoctorCmp> {
-    return await this.find({ cmp });
+    const doctors = await this.search({ cmp });
+    if (!doctors[0]) throw new BadRequestException(`Not exist doctor with ${cmp}`);
+    return doctors[0];
   }
 }

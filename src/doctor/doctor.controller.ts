@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Param, ParseIntPipe, Post } from '@nestjs/common';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
 import { DoctorService } from './doctor.service';
 import { DoctorCmpFilterDto } from './dto/doctor-cmp-filter.dto';
 
@@ -28,9 +28,9 @@ export class DoctorController {
     return await this.doctorService.getDetail(cmp);
   }
 
-  @Post("find")
-  async find(@Body() filterData: DoctorCmpFilterDto) {
-    return await this.doctorService.find(filterData);
+  @Post("search")
+  async search(@Body() filterData: DoctorCmpFilterDto) {
+    return await this.doctorService.search(filterData);
   }
-  
+
 }
